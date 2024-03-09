@@ -5,13 +5,24 @@ const UserController = require('../controllers/userController');
 const { nearestNeighbor } = require("../algorithms/nearestNeighbor")*/
 
 function distance(p1, p2) {
-    var dx = p2[0] - p1[0];
-    var dy = p2[1] - p1[1];
+    var dx = p2.x - p1.x;
+    var dy = p2.y - p1.y;
+
+    var result = Math.sqrt(dx * dx + dy * dy);
+
+    console.log("Distância entre ", p1, " e ", p2, " : ", result)
+
     return Math.sqrt(dx * dx + dy * dy);
 }
 
 function newNearestNeighbor(points) {
     const n = points.length;
+
+    // Ensure there are points to process
+    if (n === 0) {
+        return [];
+    }
+
     const start = points[0];
     const path = [start];
     const used = Array(n).fill(false);
@@ -20,15 +31,18 @@ function newNearestNeighbor(points) {
     for (let i = 1; i < n; i++) {
         let best = -1;
         let minDistance = Infinity;
-        for (let j = 1; j < n; j++) {
+        for (let j = 0; j < n; j++) {
             if (!used[j]) {
                 const currentDistance = distance(path[i - 1], points[j]);
+
+                // Guarda e melhor distância entre os pontos
                 if (currentDistance < minDistance) {
                     best = j;
                     minDistance = currentDistance;
                 }
             }
         }
+        console.log("Calculei a ", i, " rota")
         path.push(points[best]);
         used[best] = true;
     }
@@ -65,9 +79,10 @@ router.post('/filter', UserController.getOneUser);
     }
 });*/
 
-router.get('/calculateDistanceSolution', (req, res) => {
+router.post('/calculateDistanceSolution', (req, res) => {
     try {
-        var points = [[0, 0], [2, 6], [3, 4], [1, 2]];
+        var points = req.body.points;
+
         var path = newNearestNeighbor(points)
 
         res.status(200).json(path)
