@@ -1,117 +1,162 @@
-function calculateDistance(point1, point2) {
-    const deltaX = point1.x - point2.x;
-    const deltaY = point1.y - point2.y;
-    return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+// ------------- Rota mais rápida --------------- //
+
+function calculateDistance(p1, p2) {
+    var dx = p2.x - p1.x;
+    var dy = p2.y - p1.y;
+
+    var result = Math.sqrt(dx * dx + dy * dy);
+
+    console.log("Distância entre ", p1, " e ", p2, " : ", result)
+
+    return result
 }
 
-// Function to calculate the distance matrix between all pairs of points
 function calculateDistanceMatrix(points) {
     const n = points.length;
     const matrix = [];
 
     for (let i = 0; i < n; i++) {
+        points[i].index = i; // Add index property to each point
         matrix[i] = [];
+
         for (let j = 0; j < n; j++) {
             matrix[i][j] = calculateDistance(points[i], points[j]);
         }
     }
 
-    console.log("Matriz: ", matrix)
-
     return matrix;
 }
 
-function initializePopulation(points, populationSize) {
+function shortestPath(points) {
     const n = points.length;
-    const population = [];
 
-    for (let i = 0; i < populationSize; i++) {
-        const tour = [...Array(n).keys()].slice(1); // Initial tour (excluding the starting city)
-        shuffleArray(tour); // Shuffle the tour randomly
-        population.push([0, ...tour, 0]); // Complete the tour by returning to the starting city
+    // Garantindo que há pontos para processar
+    if (n === 0) {
+        return [];
     }
 
-    console.log("População inicial:" , population)
+    const start = points[0];
+    const path = [start];
+    const used = Array(n).fill(false);
+    used[0] = true;
 
-    return population;
+    for (let i = 1; i < n; i++) {
+        let best = -1;
+        let minDistance = Infinity;
+        for (let j = 0; j < n; j++) {
+            if (!used[j]) {
+                const currentDistance = calculateDistance(path[i - 1], points[j]);
+
+                // Guarda e melhor distância entre os pontos
+                if (currentDistance < minDistance) {
+                    best = j;
+                    minDistance = currentDistance;
+                }
+            }
+        }
+        console.log("Calculei a ", i, " rota")
+        path.push(points[best]);
+        used[best] = true;
+    }
+
+    // Garantindo que a rota sempre voltará para o início
+    path.push(start);
+
+    return path;
 }
 
-// Function to shuffle an array (Fisher-Yates algorithm)
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+function shortestPathMatrix(points) {
+    const n = points.length;
+
+    if (n === 0) {
+        return [];
     }
+
+    const distanceMatrix = calculateDistanceMatrix(points);
+
+    const start = points[0];
+    const path = [start];
+    const used = Array(n).fill(false);
+    used[0] = true;
+
+    for (let i = 1; i < n; i++) {
+        let best = -1;
+        let minDistance = Infinity;
+        for (let j = 0; j < n; j++) {
+            if (!used[j]) {
+                const currentDistance = distanceMatrix[path[i - 1].index][j];
+
+                if (currentDistance < minDistance) {
+                    best = j;
+                    minDistance = currentDistance;
+                }
+            }
+        }
+        path.push(points[best]);
+        used[best] = true;
+    }
+
+    path.push(start);
+
+    return path;
 }
 
-// Function to perform crossover (ordered crossover)
-function crossover(parent1, parent2) {
-    const n = parent1.length - 2; // Exclude starting and ending cities
-    const start = Math.floor(Math.random() * n);
-    const end = Math.floor(Math.random() * (n - start)) + start + 1;
+// ------------- Todas as rotas possíveis --------------- //
 
-    const child = [...Array(n).keys()].map(() => -1);
+function generateAllRoutes(points) {
+    const n = points.length;
 
-    // Copy the segment from parent1 to the child
-    for (let i = start; i < end; i++) {
-        child[i] = parent1[i];
+    if (n < 2) {
+        return [];
     }
 
-    // Fill in the remaining positions from parent2
-    let index = end % n;
-    for (let i = 0; i < n; i++) {
-        if (!child.includes(parent2[index])) {
-            child[index] = parent2[index];
-            index = (index + 1) % n;
+    const start = points[0];
+    const routes = [];
+    const used = Array(n).fill(false);
+
+    function backtrack(path) {
+        if (path.length === n) {
+            // Garantindo que a rota sempre voltará para o início
+            path.push(start);
+            routes.push({
+                route: path.map(p => ({ x: p.x, y: p.y })),
+                totalDistance: calculateTotalDistance(path),
+            });
+            path.pop(); // Remove o ponto adicionado no início
+            return;
+        }
+
+        for (let i = 1; i < n; i++) {
+            if (!used[i]) {
+                used[i] = true;
+                path.push(points[i]);
+                backtrack(path);
+                path.pop();
+                used[i] = false;
+            }
         }
     }
 
-    return [0, ...child, 0]; // Complete the tour by returning to the starting city
+    backtrack([start]);
+
+    return routes;
 }
 
-function calculateFitness(tour, distanceMatrix) {
+function calculateTotalDistance(route) {
     let totalDistance = 0;
 
-    for (let i = 0; i < tour.length - 1; i++) {
-        totalDistance += distanceMatrix[tour[i]][tour[i + 1]];
+    for (let i = 0; i < route.length - 1; i++) {
+        totalDistance += calculateDistance(route[i], route[i + 1]);
     }
 
-    return 1 / totalDistance; // Inverse of the total distance as the fitness
-}
-
-// Function to perform mutation (swap mutation)
-function mutate(tour) {
-    const n = tour.length - 2; // Exclude starting and ending cities
-    const index1 = Math.floor(Math.random() * n) + 1; // Exclude the starting city
-    let index2 = Math.floor(Math.random() * n) + 1;
-
-    // Ensure indices are different
-    while (index2 === index1) {
-        index2 = Math.floor(Math.random() * n) + 1;
-    }
-
-    [tour[index1], tour[index2]] = [tour[index2], tour[index1]]; // Swap cities
-    return tour;
-}
-
-function selectTopIndices(fitnessValues, numTop) {
-    const indices = [...Array(fitnessValues.length).keys()];
-    indices.sort((a, b) => fitnessValues[b] - fitnessValues[a]);
-    return indices.slice(0, numTop);
-}
-
-// Function to find the index of the maximum value in an array
-function findMaxIndex(arr) {
-    return arr.indexOf(Math.max(...arr));
+    return totalDistance;
 }
 
 module.exports = {
     calculateDistance,
     calculateDistanceMatrix,
-    calculateFitness,
-    initializePopulation,
-    mutate,
-    crossover,
-    selectTopIndices,
-    findMaxIndex,
+    shortestPath,
+    shortestPathMatrix,
+    generateAllRoutes,
+
 };
