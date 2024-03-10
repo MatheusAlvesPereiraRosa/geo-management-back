@@ -20,7 +20,6 @@ function permute(arr) {
     function permuteHelper(arr, start) {
         if (start === arr.length - 1) {
             result.push([...arr]);
-            result.push([...arr].reverse()); // Add the reverse order as well
             return;
         }
 
@@ -35,26 +34,44 @@ function permute(arr) {
     return result;
 }
 
-function findBestRoute(points) {
-    const start = { x: 0, y: 0 };
-    const allPossibleRoutes = permute(points);
-    let bestRoute = allPossibleRoutes[0];
-    let minDistance = calculateTotalDistance([...bestRoute, start]);
+function removeDuplicatesWithinPairs(routes) {
+    const seenRoutes = new Set();
 
-    for (const route of allPossibleRoutes) {
-        const totalDistance = calculateTotalDistance([...route, start]);
-        if (totalDistance < minDistance) {
-            minDistance = totalDistance;
-            bestRoute = route;
+    for (const route of routes) {
+        const routeSet = new Set(JSON.stringify(route.route));
+        seenRoutes.add(routeSet);
+    }
+
+    const uniqueRoutes = [];
+
+    for (const route of routes) {
+        const routeSet = new Set(JSON.stringify(route.route));
+
+        if (!seenRoutes.has(routeSet)) {
+            uniqueRoutes.push(route);
         }
     }
 
-    // Ensure the best route starts and ends at the origin
-    bestRoute = [start, ...bestRoute, start];
-
-    return { points: bestRoute, distance: minDistance };
+    return uniqueRoutes;
 }
 
+function findBestRoute(points) {
+    const start = { x: 0, y: 0 };
+    const allPossibleRoutes = permute(points);
+    const routesWithTotalDistance = allPossibleRoutes.map(route => ({
+        route,
+        totalDistance: calculateTotalDistance([start, ...route, start])
+    }));
+    const uniqueRoutes = removeDuplicatesWithinPairs(routesWithTotalDistance);
+
+    // Sort unique routes by total distance in ascending order
+    uniqueRoutes.sort((a, b) => a.totalDistance - b.totalDistance);
+
+    // Ensure the best route starts and ends at the origin
+    const bestRoute = [start, ...uniqueRoutes[0].route, start];
+
+    return { points: bestRoute, distance: uniqueRoutes[0].totalDistance };
+}
 
 // ------------- Todas as rotas possíveis --------------- //
 
