@@ -14,63 +14,94 @@ function calculateTotalDistance(route) {
     return totalDistance;
 }
 
-function permute(arr) {
-    const result = [];
-
-    function permuteHelper(arr, start) {
-        if (start === arr.length - 1) {
-            result.push([...arr]);
-            return;
-        }
-
-        for (let i = start; i < arr.length; i++) {
-            [arr[start], arr[i]] = [arr[i], arr[start]];
-            permuteHelper(arr, start + 1);
-            [arr[start], arr[i]] = [arr[i], arr[start]];
-        }
-    }
-
-    permuteHelper(arr, 0);
-    return result;
+function swap(arr, i, j) {
+    const temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
 }
 
-function removeDuplicatesWithinPairs(routes) {
-    const seenRoutes = new Set();
+function generatePermutations(points, callback) {
+    const n = points.length;
+    const c = new Array(n).fill(0);
 
-    for (const route of routes) {
-        const routeSet = new Set(JSON.stringify(route.route));
-        seenRoutes.add(routeSet);
-    }
+    callback([...points]);
 
-    const uniqueRoutes = [];
+    let i = 0;
+    while (i < n) {
+        if (c[i] < i) {
+            if (i % 2 === 0) {
+                swap(points, 0, i);
+            } else {
+                swap(points, c[i], i);
+            }
 
-    for (const route of routes) {
-        const routeSet = new Set(JSON.stringify(route.route));
+            callback([...points]);
 
-        if (!seenRoutes.has(routeSet)) {
-            uniqueRoutes.push(route);
+            c[i]++;
+            i = 0;
+        } else {
+            c[i] = 0;
+            i++;
         }
     }
+}
 
-    return uniqueRoutes;
+function nearestInsertion(points) {
+    const start = { x: 0, y: 0 };
+    let unvisited = [...points];
+    let currentPoint = start;
+    let route = [start];
+    let totalDistance = 0;
+
+    while (unvisited.length > 0) {
+        let nearestIndex = 0;
+        let nearestDistance = Infinity;
+
+        for (let i = 0; i < unvisited.length; i++) {
+            const distance = calculateDistance(currentPoint, unvisited[i]);
+            if (distance < nearestDistance) {
+                nearestIndex = i;
+                nearestDistance = distance;
+            }
+        }
+
+        totalDistance += nearestDistance;
+        currentPoint = unvisited[nearestIndex];
+        route.push(unvisited[nearestIndex]);
+        unvisited.splice(nearestIndex, 1);
+    }
+
+    // Add the distance back to the start
+    totalDistance += calculateDistance(route[route.length - 1], start);
+    route.push(start);
+
+    return { points: route, distance: totalDistance };
 }
 
 function findBestRoute(points) {
     const start = { x: 0, y: 0 };
-    const allPossibleRoutes = permute(points);
-    const routesWithTotalDistance = allPossibleRoutes.map(route => ({
-        route,
-        totalDistance: calculateTotalDistance([start, ...route, start])
-    }));
-    const uniqueRoutes = removeDuplicatesWithinPairs(routesWithTotalDistance);
 
-    // Sort unique routes by total distance in ascending order
-    uniqueRoutes.sort((a, b) => a.totalDistance - b.totalDistance);
+    const thresholdForPermutation = 10; // Adjust the threshold as needed
 
-    // Ensure the best route starts and ends at the origin
-    const bestRoute = [start, ...uniqueRoutes[0].route, start];
+    if (points.length <= thresholdForPermutation) {
 
-    return { points: bestRoute, distance: uniqueRoutes[0].totalDistance };
+        let minDistance = Infinity;
+        let bestRoute;
+
+        generatePermutations(points, route => {
+            const totalDistance = calculateTotalDistance([start, ...route, start]);
+
+            if (totalDistance < minDistance) {
+                minDistance = totalDistance;
+                bestRoute = [start, ...route, start];
+            }
+        });
+
+        return { points: bestRoute, distance: minDistance };
+    } else {
+        const nearestInsertionResult = nearestInsertion(points);
+        return nearestInsertionResult;
+    }
 }
 
 // ------------- Todas as rotas possíveis --------------- //
@@ -113,18 +144,6 @@ function generateAllRoutes(points) {
 
     return routes;
 }
-
-/*
-function calculateTotalDistance(route) {
-    let totalDistance = 0;
-
-    for (let i = 0; i < route.length - 1; i++) {
-        totalDistance += calculateDistance(route[i], route[i + 1]);
-    }
-
-    return totalDistance;
-}*/
-
 
 module.exports = {
     findBestRoute,
