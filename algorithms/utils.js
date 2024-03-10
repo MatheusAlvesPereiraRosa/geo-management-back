@@ -1,105 +1,60 @@
 // ------------- Rota mais rápida --------------- //
 
-function calculateDistance(p1, p2) {
-    var dx = p2.x - p1.x;
-    var dy = p2.y - p1.y;
-
-    var result = Math.sqrt(dx * dx + dy * dy);
-
-    console.log("Distância entre ", p1, " e ", p2, " : ", result)
-
-    return result
+function calculateDistance(point1, point2) {
+    return Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2));
 }
 
-function calculateDistanceMatrix(points) {
-    const n = points.length;
-    const matrix = [];
+function calculateTotalDistance(route) {
+    let totalDistance = 0;
+    for (let i = 1; i < route.length; i++) {
+        totalDistance += calculateDistance(route[i - 1], route[i]);
+    }
+    // Adding the distance from the last point back to the start
+    totalDistance += calculateDistance(route[route.length - 1], route[0]);
+    return totalDistance;
+}
 
-    for (let i = 0; i < n; i++) {
-        points[i].index = i; // Add index property to each point
-        matrix[i] = [];
+function permute(arr) {
+    const result = [];
 
-        for (let j = 0; j < n; j++) {
-            matrix[i][j] = calculateDistance(points[i], points[j]);
+    function permuteHelper(arr, start) {
+        if (start === arr.length - 1) {
+            result.push([...arr]);
+            result.push([...arr].reverse()); // Add the reverse order as well
+            return;
+        }
+
+        for (let i = start; i < arr.length; i++) {
+            [arr[start], arr[i]] = [arr[i], arr[start]];
+            permuteHelper(arr, start + 1);
+            [arr[start], arr[i]] = [arr[i], arr[start]];
         }
     }
 
-    return matrix;
+    permuteHelper(arr, 0);
+    return result;
 }
 
-function shortestPath(points) {
-    const n = points.length;
+function findBestRoute(points) {
+    const start = { x: 0, y: 0 };
+    const allPossibleRoutes = permute(points);
+    let bestRoute = allPossibleRoutes[0];
+    let minDistance = calculateTotalDistance([...bestRoute, start]);
 
-    // Garantindo que há pontos para processar
-    if (n === 0) {
-        return [];
-    }
-
-    const start = points[0];
-    const path = [start];
-    const used = Array(n).fill(false);
-    used[0] = true;
-
-    for (let i = 1; i < n; i++) {
-        let best = -1;
-        let minDistance = Infinity;
-        for (let j = 0; j < n; j++) {
-            if (!used[j]) {
-                const currentDistance = calculateDistance(path[i - 1], points[j]);
-
-                // Guarda e melhor distância entre os pontos
-                if (currentDistance < minDistance) {
-                    best = j;
-                    minDistance = currentDistance;
-                }
-            }
+    for (const route of allPossibleRoutes) {
+        const totalDistance = calculateTotalDistance([...route, start]);
+        if (totalDistance < minDistance) {
+            minDistance = totalDistance;
+            bestRoute = route;
         }
-        console.log("Calculei a ", i, " rota")
-        path.push(points[best]);
-        used[best] = true;
     }
 
-    // Garantindo que a rota sempre voltará para o início
-    path.push(start);
+    // Ensure the best route starts and ends at the origin
+    bestRoute = [start, ...bestRoute, start];
 
-    return path;
+    return { points: bestRoute, distance: minDistance };
 }
 
-function shortestPathMatrix(points) {
-    const n = points.length;
-
-    if (n === 0) {
-        return [];
-    }
-
-    const distanceMatrix = calculateDistanceMatrix(points);
-
-    const start = points[0];
-    const path = [start];
-    const used = Array(n).fill(false);
-    used[0] = true;
-
-    for (let i = 1; i < n; i++) {
-        let best = -1;
-        let minDistance = Infinity;
-        for (let j = 0; j < n; j++) {
-            if (!used[j]) {
-                const currentDistance = distanceMatrix[path[i - 1].index][j];
-
-                if (currentDistance < minDistance) {
-                    best = j;
-                    minDistance = currentDistance;
-                }
-            }
-        }
-        path.push(points[best]);
-        used[best] = true;
-    }
-
-    path.push(start);
-
-    return path;
-}
 
 // ------------- Todas as rotas possíveis --------------- //
 
@@ -142,6 +97,7 @@ function generateAllRoutes(points) {
     return routes;
 }
 
+/*
 function calculateTotalDistance(route) {
     let totalDistance = 0;
 
@@ -150,13 +106,10 @@ function calculateTotalDistance(route) {
     }
 
     return totalDistance;
-}
+}*/
+
 
 module.exports = {
-    calculateDistance,
-    calculateDistanceMatrix,
-    shortestPath,
-    shortestPathMatrix,
+    findBestRoute,
     generateAllRoutes,
-
 };
