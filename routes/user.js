@@ -12,13 +12,13 @@ function distance(p1, p2) {
 
     console.log("Distância entre ", p1, " e ", p2, " : ", result)
 
-    return Math.sqrt(dx * dx + dy * dy);
+    return result
 }
 
 function newNearestNeighbor(points) {
     const n = points.length;
 
-    // Ensure there are points to process
+    // Garantindo que há pontos para processar
     if (n === 0) {
         return [];
     }
@@ -47,10 +47,67 @@ function newNearestNeighbor(points) {
         used[best] = true;
     }
 
-    // Ensure the tour returns to the starting point (0, 0)
+    // Garantindo que a rota sempre voltará para o início
     path.push(start);
 
     return path;
+}
+
+// Todas as rotas possíveis
+
+function calculateDistance(p1, p2) {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+function generateRoutes(points) {
+    const n = points.length;
+
+    if (n < 2) {
+        return [];
+    }
+
+    const start = points[0];
+    const routes = [];
+    const used = Array(n).fill(false);
+
+    function backtrack(path) {
+        if (path.length === n) {
+            // Garantindo que a rota sempre voltará para o início
+            path.push(start);
+            routes.push({
+                route: path.map(p => ({ x: p.x, y: p.y })),
+                totalDistance: calculateTotalDistance(path),
+            });
+            path.pop(); // Remove o ponto adicionado no início
+            return;
+        }
+
+        for (let i = 1; i < n; i++) {
+            if (!used[i]) {
+                used[i] = true;
+                path.push(points[i]);
+                backtrack(path);
+                path.pop();
+                used[i] = false;
+            }
+        }
+    }
+
+    backtrack([start]);
+
+    return routes;
+}
+
+function calculateTotalDistance(route) {
+    let totalDistance = 0;
+
+    for (let i = 0; i < route.length - 1; i++) {
+        totalDistance += calculateDistance(route[i], route[i + 1]);
+    }
+
+    return totalDistance;
 }
 
 // Example routes
@@ -84,6 +141,20 @@ router.post('/calculateDistanceSolution', (req, res) => {
         var points = req.body.points;
 
         var path = newNearestNeighbor(points)
+
+        res.status(200).json(path)
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+})
+
+router.post('/calculateAllRoutes', (req, res) => {
+    try {
+        var points = req.body.points;
+
+        var path = generateRoutes(points)
 
         res.status(200).json(path)
 
