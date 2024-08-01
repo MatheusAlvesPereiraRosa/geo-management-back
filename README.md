@@ -1,5 +1,5 @@
 
-# geo-managment-back
+# geo-management-back
 
 Seja bem vindo ao meu projeto, sou Matheus Alves e esse projeto foi feito seguindo alguns especificações técnicas de um desafio que recebe, entretanto, acabei adicionando alguns conteúdos a mais nele seguindo alguns estudos meus na época.
 
