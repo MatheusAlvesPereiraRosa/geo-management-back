@@ -54,7 +54,7 @@ Após isso rode o projeto com o comando npm run dev
   npm run dev
 ```
 
-E pronto, se você receber a mensagem:
+E pronto, se você receber a mensagem no terminal:
 
 ```bash
 Server is running at http://localhost:3000
