@@ -26,15 +26,6 @@ sequelize
         console.error('Error synchronizing the database:', error.message);
     });
 
-sequelize
-    .authenticate()
-    .then(() => {
-        console.log('Connection to the database has been established successfully.');
-    })
-    .catch((error) => {
-        console.error('Unable to connect to the database:', error.message);
-    });
-
 app.use("/users/", userRoutes)
 
 app.listen(port, () => {
