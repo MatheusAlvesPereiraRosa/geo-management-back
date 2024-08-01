@@ -37,6 +37,17 @@ Depois rode o comando:
   npm install
 ```
 
+E crie um arquivo .env com as seguintes informações como no exemplo abaixo:
+
+```bash
+  DB_USER="postgres"
+  DB_PASS="admin"
+  DB_NAME="geo-managment"
+  DB_HOST="localhost"
+```
+
+Obs.: Substitua DB_PASS com a senha que você colocou ao baixar o postgres.
+
 Após isso rode o projeto com o comando npm run dev
 
 ```bash
