@@ -27,7 +27,7 @@ O Back-end foi dividido de acordo com boas práticas na hora de organizar a apli
 
 ## Instalação
 
-Primeiramente, certifique-se que já possui o postgres baixado em seu computador para servir de banco de dados, e após isso, logue com sua senha (caso tenha sido definida), e crie uma base de dados chamada geo-managment.
+Primeiramente, certifique-se que já possui o postgres baixado em seu computador para servir de banco de dados, e após isso, logue com sua senha pelo pgAdmin ou via shell (caso tenha sido definida), e crie uma base de dados chamada geo-managment.
 
 Clone o repositório com o comando git clone no github e abra o arquivo com o terminal de sua escolha.
 
