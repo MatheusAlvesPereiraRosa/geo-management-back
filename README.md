@@ -51,7 +51,7 @@ Obs.: Substitua DB_PASS com a senha que você colocou ao baixar o postgres.
 Após isso rode o projeto com o comando npm run dev
 
 ```bash
-  npm run dev
+  node index.js
 ```
 
 E pronto, se você receber a mensagem no terminal:
