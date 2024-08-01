@@ -2,30 +2,69 @@ const User = require('../models/user');
 
 const UserController = {
     createUser: async (req, res) => {
+
+        const { name, email, phoneNumber, coordinates } = req.body;
+
+        if (name === "" || name === undefined) {
+            return res.status(400).json({ type: "Error", errBR: "Nome não informado", errEN: "Name not informed"})
+        }
+
+        if (email === "" || email === undefined) {
+            return res.status(400).json({ type: "Error", errBR:"Email não informado", errEN: "Email not informed"})
+        }
+
+        if (phoneNumber === "" || phoneNumber === undefined) {
+            return res.status(400).json({ type: "Error", errBR:"Telefone não informado", errEN: "Phone number not informed"})
+        }
+
+        if (!coordinates) {
+            return res.status(400).json({ type: "Error", errBR:"Não há dados de coordenadas", errEN: "There is no coordinate data"})
+        }
+
+        if (coordinates.x === "" || coordinates.x === 0 || coordinates.x === undefined) {
+            return res.status(400).json({ type: "Error", errBR:"Coordenada 'X' não informada", errEN: "Coordinate 'X' not informed"})
+        }
+
+        if (coordinates.y === "" || coordinates.y === 0 || coordinates.y === undefined) {
+            return res.status(400).json({ type: "Error", errBR:"Coordenada 'Y' não informada", errEN: "Coordinate 'Y' not informed"})
+        }
+
         try {
-            const user = await User.create(req.body);
-            res.status(200).json(user);
+            const existingUser = await User.findOne({ where: { email } });
+
+            if (existingUser) {
+                return res.status(400).json({ type: "Error", errBR: "O email já está em uso", errEN: "Email is already in use" });
+            }
+
+            const user = await User.create({
+                name,
+                email,
+                phoneNumber,
+                coordinatesX: coordinates.x,
+                coordinatesY: coordinates.y,
+            })
+
+            return res.json({type: "Sucess", msgBR: "Usuário adicionado com sucesso", msgEN: "User added sucessful", user: user});
         } catch (error) {
-            console.error(error);
-            res.status(500).send('Server Error');
+            return res.status(400).json({ type: "Error", errBR: `Erro: ${error}`, errEN: `Error: ${error}` })
         }
     },
 
     getAllUsers: async (req, res) => {
         try {
             const users = await User.findAll();
-            res.json(users);
+            return res.json(users);
         } catch (error) {
             console.error(error);
-            res.status(500).send('Server Error');
+            return res.status(500).json({ type: "Error", errBR: `Erro: ${error}`, errEN: `Error: ${error}` });
         }
     },
 
     getOneUser: async (req, res) => {
-        try {
-            // Extraindo os parâmetros do corpo da requisição
-            const { name, email, phoneNumber } = req.body;
+        // Extraindo os parâmetros do corpo da requisição
+        const { name, email, phoneNumber } = req.body;
 
+        try {
             // Criando uma constante para personalizar a cláusula where
             const whereClause = {};
 
@@ -45,11 +84,10 @@ const UserController = {
             const user = await User.findAll({
                 where: whereClause,
             });
-            
-            res.json(user)
+
+            return res.json(user)
         } catch (error) {
-            console.error(error)
-            res.status(500).send("Server Error")
+            return res.status(500).json({ type: "Error", errBR: `Erro: ${error}`, errEN: `Error: ${error}` })
         }
     }
 };
