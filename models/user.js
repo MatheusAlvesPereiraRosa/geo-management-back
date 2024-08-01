@@ -15,6 +15,14 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    coordinatesX: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
+    coordinatesY: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 });
 
 module.exports = User;
